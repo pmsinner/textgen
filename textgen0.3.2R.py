@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import pymorphy2 as pym
 from __future__ import print_function
 from termcolor import colored
 from keras.models import Sequential
@@ -60,6 +61,10 @@ if namespace.help:
 
 path = namespace.source
 commas = [",", ".", "/", "\\", ",",  "\'", "\"", "(", ")", "-", "!", "?", "{", "}", '*', ':', ';', '[', ']', '_', "”", "‘", "’", "“"]
+
+print(colored("Инициализируем словарь OpenCorpora", "green"))
+morph = pym.MorphAnalyzer() #Инициализация анализатора морфем
+
 print(colored("Идёт обработка текста", "green"))
 
 text = open(path).read().lower()
@@ -68,12 +73,25 @@ for c in commas:
 f = open(path, "w")
 f.write(text)
 f.close()
+
+normText = text.split()
+for i, word in enumerate(text.split()):
+	try:
+		nWord = morph.parse(word)[0].normal_form
+		normText[i] = nWord
+	except:
+		print(colored("Невалидное слово: " + word, "red"))
+
+f = open(namespace.source + ".ntxt", "w")
+f.write(normText.join(" "))
+f.close()
+
 if os.path.exists(namespace.source + ".w2vm"):
 	print(colored("Загружается словарь", "green"))
 	tw2v = Word2Vec.load(namespace.source + ".w2vm") 
 else:
 	print(colored("Создаётся словарь. Это может занять некоторое время", "green"))
-	tw2v = Word2Vec(Text8Corpus(path), size=100, min_count=1)
+	tw2v = Word2Vec(Text8Corpus(path + ".ntxt"), size=100, min_count=1)
 	#tw2v.build_vocab(wText)
 	#print(tw2v.vocab)
 	#tw2v.train(wText)
@@ -82,7 +100,7 @@ else:
 	print(colored("Словарь сохранён", "green"))
 
 gWords = tw2v.vocab.keys()
-words = list(set(text.split()))
+words = list(set(normText))
 
 
 def vecToWord(vec):
@@ -105,8 +123,8 @@ for word in words:
 		text = text.replace(word,"")
 print(colored("Идёт векторизация текста", "green"))
 vecText = []
-wText = text.split()
-for word in text.split():
+wText = normText
+for word in normText():
 	vecText.append(tw2v[word])
 
 print(colored("Векторизация текста успешно завершена", "green"))
