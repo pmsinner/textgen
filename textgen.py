@@ -85,7 +85,7 @@ def vecToWord(vec):
 	return key
 gWords = tw2v.vocab.keys()
 wText = text.split()
-for word in list(set(wText())):		#Удаление не пойманых word2vec слов из текста 
+for word in list(set(wText)):		#Удаление не пойманых word2vec слов из текста 
 	if not word in gWords:
 		text = text.replace(word,"")
 print(colored("Идёт векторизация текста", "green")) #Заполняем vecText векторами вместо слов
@@ -94,9 +94,8 @@ for word in wText:
 	vecText.append(tw2v[word])
 
 print(colored("Векторизация текста успешно завершена", "green"))
-#----------------------ТЕСТ------------------------------
 
-maxlen = namespace.centencelen #Длина обрабатываемого предложения
+maxlen = namespace.sentencelen #Длина обрабатываемого предложения
 step = 3 #Шаг анализа
 sentences = []
 next_chars = []
