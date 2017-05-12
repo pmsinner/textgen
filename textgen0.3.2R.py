@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import pymorphy2 as pym
-from __future__ import print_function
 from termcolor import colored
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Dropout, Embedding
@@ -73,18 +72,25 @@ for c in commas:
 f = open(path, "w")
 f.write(text)
 f.close()
+if os.path.exists(namespace.source + ".ntxt"):
+	print(colored("Загружается нормализованный текст", "green"))
+	f = open(namespace.source + ".ntxt", "r")
+	normText = f.read().split()
+	f.close()
+else:
+	print(colored("Нормализуется текст. Это может занять некоторое время", "green"))
+	normText = text.split()
+	for i, word in enumerate(text.split()):
+		try:
+			nWord = morph.parse(word)[0].normal_form
+			normText[i] = nWord
+		except:
+			print(colored("Невалидное слово: " + word, "red"))
+	f = open(namespace.source + ".ntxt", "w")
+	f.write(" ".join(normText))
+	f.close()
+	print(colored("Нормализация сохранена", "green"))
 
-normText = text.split()
-for i, word in enumerate(text.split()):
-	try:
-		nWord = morph.parse(word)[0].normal_form
-		normText[i] = nWord
-	except:
-		print(colored("Невалидное слово: " + word, "red"))
-
-f = open(namespace.source + ".ntxt", "w")
-f.write(normText.join(" "))
-f.close()
 
 if os.path.exists(namespace.source + ".w2vm"):
 	print(colored("Загружается словарь", "green"))
@@ -102,7 +108,15 @@ else:
 gWords = tw2v.vocab.keys()
 words = list(set(normText))
 
+pText = []
+pnText = []
 
+sText = text.split()
+for i in range(len(normText) - 1):
+	pText.append([sText[i], sText[i+1]])
+	pnText.append([normText[i], normText[i+1]])
+print(pText[:20:])
+print(pnText[:20:])
 def vecToWord(vec):
 	key = ""
 	minD = None
@@ -124,7 +138,7 @@ for word in words:
 print(colored("Идёт векторизация текста", "green"))
 vecText = []
 wText = normText
-for word in normText():
+for word in normText:
 	vecText.append(tw2v[word])
 
 print(colored("Векторизация текста успешно завершена", "green"))
@@ -193,7 +207,7 @@ if namespace.generate:
 	#print(score)
 	print("-"*15, " НАЧАЛО ", "-"*15)
 	sys.stdout.write(generated)
-
+	ntext = list(sentence)
 	while len(generated) < namespace.genlength:
 		x = np.zeros((1, maxlen + 1), dtype=np.int)
 		x[0,0] = 0
@@ -206,12 +220,28 @@ if namespace.generate:
 		next_word =  dict_index[preds.tolist().index(max(preds))]
 		generated = generated + " " +next_word
 		del(sentence[0])
+		ntext.append(next_word)
 		sentence.append(next_word)
 		#print(lToStr(sentence))
 		sys.stdout.write(" " + next_word)
 		sys.stdout.flush()
 	print()
 	print("-"*15, " КОНЕЦ ", "-"*15)
+	
+	print("-"*15, " НОРМАЛИЗАЦИЯ ", "-"*15)
+	for i in range(len(ntext)):
+		if i < len(ntext) - 1:
+			if pnText.count([ntext[i], ntext[i+1]]):
+				print(pText[pnText.index([ntext[i], ntext[i+1]])], pnText[pnText.index([ntext[i], ntext[i+1]])])
+				ntext[i] = pText[pnText.index([ntext[i], ntext[i+1]])][0]
+				try:
+					if not pnText.count([ntext[i+1], ntext[i+2]]):
+						ntext[i+1] = pText[pnText.index([ntext[i], ntext[i+1]])][1]
+				except:
+					pass
+	print(' '.join(ntext))
+	print("-"*15, " КОНЕЦ ", "-"*15)
+
 	sys.exit()
 
 if not namespace.hdf5 == '':
