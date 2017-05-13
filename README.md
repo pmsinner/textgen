@@ -48,3 +48,11 @@ $ python3 textgen.py --help
 $ python3 textgen.py --source text.txt --hdf5 text-7.hdf5 --genlength 300
 ```
 Вместо *text.txt* и *text-7.hdf5* подставьте имя файла с текстом и файла hdf5, вместо 300 -- длину нового текста в символах.
+
+@misc{chollet2015keras,
+  title={Keras},
+  author={Chollet, Fran\c{c}ois and others},
+  year={2015},
+  publisher={GitHub},
+  howpublished={\url{https://github.com/fchollet/keras}},
+}
